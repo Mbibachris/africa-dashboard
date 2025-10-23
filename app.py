@@ -1,155 +1,47 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from econml.dml import LinearDML, CausalForestDML
-from econml.dr import DRLearner
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import LinearRegression
 
-# ==============================
-# PAGE CONFIGURATION
-# ==============================
-st.set_page_config(page_title="Africa Economic Dashboard", layout="wide")
-st.title("🌍 Africa Economic Dashboard with Causal ML Insights")
+st.set_page_config(page_title="Africa Dashboard", layout="wide")
 
-# ==============================
-# DATA UPLOAD / LOADING
-# ==============================
-uploaded_file = st.file_uploader("📂 Upload your cleaned CSV data", type=["csv"])
-if uploaded_file:
-    df = pd.read_csv(uploaded_file)
-    st.success("✅ Data loaded successfully!")
-    st.dataframe(df.head())
-else:
-    st.warning("Upload your dataset to continue.")
-    st.stop()
+# --- Load Data ---
+df = pd.read_csv("data/cleaned_data.csv")
+causal_results = pd.read_csv("data/causal_results.csv")
 
-# ==============================
-# CREATE TABS
-# ==============================
-tab1, tab2 = st.tabs(["📊 Dashboard", "🧠 Causal Modeling"])
+# --- Dashboard ---
+st.sidebar.header("Dashboard Controls")
+view = st.sidebar.radio("Select View", ["Map", "Trends", "Model Results"])
 
-# ==============================
-# TAB 1 — DASHBOARD
-# ==============================
-with tab1:
-    st.subheader("Explore African Economic Indicators")
+if view == "Map":
+    year = st.slider("Select Year", int(df["year"].min()), int(df["year"].max()), int(df["year"].min()))
+    variable = st.selectbox("Select Variable", ["ghg_emissions", "gdp_per_capita", "gov_effectiveness"])
+    df_year = df[df["year"] == year]
+    fig = px.choropleth(df_year,
+                        locations="country",
+                        locationmode="country names",
+                        color=variable,
+                        color_continuous_scale="YlOrRd",
+                        title=f"{variable.replace('_', ' ').title()} in Africa ({year})")
+    fig.update_geos(fitbounds="locations", visible=False)
+    st.plotly_chart(fig, use_container_width=True)
 
-    countries = sorted(df["country"].unique())
-    years = sorted(df["year"].unique())
-    variables = [col for col in df.columns if col not in ["country", "year"]]
+elif view == "Trends":
+    country = st.selectbox("Select Country", sorted(df["country"].unique()))
+    variables = st.multiselect("Select Variables", ["ghg_emissions", "gdp_per_capita", "gov_effectiveness"],
+                               default=["gdp_per_capita"])
+    df_country = df[df["country"] == country]
+    fig = px.line(df_country, x="year", y=variables,
+                  title=f"{', '.join(variables).title()} over Time in {country}", markers=True)
+    st.plotly_chart(fig, use_container_width=True)
 
-    view = st.radio("Select View", ["Map View", "Trend View", "Comparison View"])
+elif view == "Model Results":
+    st.subheader("Causal Machine Learning Results")
+    st.dataframe(causal_results)
+    ate = causal_results["ATE"].iloc[0]
+    ci_low = causal_results["CI_low"].iloc[0]
+    ci_high = causal_results["CI_high"].iloc[0]
 
-    if view == "Map View":
-        var = st.selectbox("Select Variable", variables)
-        year = st.selectbox("Select Year", years)
-        df_year = df[df["year"] == year]
+    st.metric("Average Treatment Effect (ATE)", f"{ate:.4f}",
+              f"95% CI: [{ci_low:.4f}, {ci_high:.4f}]")
 
-        fig = px.choropleth(
-            df_year,
-            locations="country",
-            locationmode="country names",
-            color=var,
-            color_continuous_scale="YlOrRd",
-            title=f"{var.replace('_',' ').title()} in Africa ({year})",
-        )
-        fig.update_geos(fitbounds="locations", visible=False)
-        st.plotly_chart(fig, use_container_width=True)
-
-    elif view == "Trend View":
-        country = st.selectbox("Select Country", countries)
-        vars_selected = st.multiselect("Select Variables", variables, variables[:2])
-
-        fig = px.line(
-            df[df["country"] == country],
-            x="year",
-            y=vars_selected,
-            title=f"{', '.join(vars_selected).title()} Over Time in {country}",
-            markers=True,
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-    elif view == "Comparison View":
-        var = st.selectbox("Select Variable to Compare", variables)
-        fig = px.line(
-            df,
-            x="year",
-            y=var,
-            color="country",
-            title=f"{var.replace('_',' ').title()} Across African Countries",
-        )
-        st.plotly_chart(fig, use_container_width=True)
-
-# ==============================
-# TAB 2 — CAUSAL MODELING
-# ==============================
-with tab2:
-    st.subheader("Causal Machine Learning (EconML)")
-
-    outcome = st.selectbox("Select Outcome Variable (Y)", variables)
-    treatment = st.selectbox("Select Treatment Variable (T)", variables)
-    controls = st.multiselect(
-        "Select Control Variables (X)",
-        [v for v in variables if v not in [outcome, treatment]]
-    )
-
-    model_choice = st.radio(
-        "Select Model Type",
-        [
-            "LinearDML (baseline)",
-            "DRLearner (semi-parametric)",
-            "CausalForestDML (heterogeneous effects)"
-        ],
-        horizontal=False
-    )
-
-    if st.button("Run Causal Estimation"):
-        from econml.dml import LinearDML, CausalForestDML
-        from econml.dr import DRLearner
-        from sklearn.ensemble import RandomForestRegressor
-        from sklearn.linear_model import LinearRegression
-
-        df_clean = df[[outcome, treatment] + controls].dropna()
-        Y = df_clean[outcome]
-        T = df_clean[treatment]
-        X = df_clean[controls] if controls else None
-
-        if "LinearDML" in model_choice:
-            est = LinearDML(
-                model_y=RandomForestRegressor(),
-                model_t=RandomForestRegressor(),
-                linear_model=LinearRegression(),
-                random_state=42,
-            )
-        elif "DRLearner" in model_choice:
-            est = DRLearner(
-                model_regression=RandomForestRegressor(),
-                model_propensity=RandomForestRegressor(),
-                random_state=42,
-            )
-        elif "CausalForestDML" in model_choice:
-            est = CausalForestDML(
-                model_t=RandomForestRegressor(),
-                model_y=RandomForestRegressor(),
-                random_state=42,
-            )
-
-        est.fit(Y, T, X=X)
-        ate = est.ate(X)
-        ci = est.ate_interval(X)
-
-        st.success(f"✅ Model estimation complete using {model_choice}!")
-        st.markdown(f"""
-        ### Average Treatment Effect (ATE)
-        **ATE:** {ate:.4f}  
-        **95% Confidence Interval:** [{ci[0]:.4f}, {ci[1]:.4f}]
-        """)
-
-        if hasattr(est, "effect"):
-            cate = est.effect(X)
-            st.markdown("### Conditional Average Treatment Effects (CATE)")
-            st.dataframe(pd.DataFrame(cate, columns=["Effect"]).head(10))
-
-
-st.sidebar.info("Built by Christopher Mbiba")
+    st.info("These results were estimated locally using EconML and imported into Streamlit.")
