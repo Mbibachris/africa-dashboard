@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-from econml.dml import LinearDML, ForestDML, CausalForestDML
+from econml.dml import LinearDML, CausalForestDML
 from econml.dr import DRLearner
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -98,7 +98,6 @@ with tab2:
         "Select Model Type",
         [
             "LinearDML (baseline)",
-            "ForestDML (non-linear)",
             "DRLearner (semi-parametric)",
             "CausalForestDML (heterogeneous effects)"
         ],
@@ -106,23 +105,21 @@ with tab2:
     )
 
     if st.button("Run Causal Estimation"):
+        from econml.dml import LinearDML, CausalForestDML
+        from econml.dr import DRLearner
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.linear_model import LinearRegression
+
         df_clean = df[[outcome, treatment] + controls].dropna()
         Y = df_clean[outcome]
         T = df_clean[treatment]
         X = df_clean[controls] if controls else None
 
-        # Model selection
         if "LinearDML" in model_choice:
             est = LinearDML(
                 model_y=RandomForestRegressor(),
                 model_t=RandomForestRegressor(),
                 linear_model=LinearRegression(),
-                random_state=42,
-            )
-        elif "ForestDML" in model_choice:
-            est = ForestDML(
-                model_y=RandomForestRegressor(),
-                model_t=RandomForestRegressor(),
                 random_state=42,
             )
         elif "DRLearner" in model_choice:
@@ -138,7 +135,6 @@ with tab2:
                 random_state=42,
             )
 
-        # Fit the model
         est.fit(Y, T, X=X)
         ate = est.ate(X)
         ci = est.ate_interval(X)
@@ -150,10 +146,10 @@ with tab2:
         **95% Confidence Interval:** [{ci[0]:.4f}, {ci[1]:.4f}]
         """)
 
-        # Show conditional treatment effects
         if hasattr(est, "effect"):
             cate = est.effect(X)
             st.markdown("### Conditional Average Treatment Effects (CATE)")
             st.dataframe(pd.DataFrame(cate, columns=["Effect"]).head(10))
+
 
 st.sidebar.info("Built by Christopher Mbiba")
