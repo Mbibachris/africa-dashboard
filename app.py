@@ -5,8 +5,8 @@ import plotly.express as px
 st.set_page_config(page_title="Africa Dashboard", layout="wide")
 
 # --- Load Data ---
-df = pd.read_csv("data/cleaned_data.csv")
-causal_results = pd.read_csv("data/causal_results.csv")
+df = pd.read_csv("data.csv")
+causal_results = pd.read_csv("causal_results.csv")
 
 # --- Dashboard ---
 st.sidebar.header("Dashboard Controls")
