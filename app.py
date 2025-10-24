@@ -128,7 +128,7 @@ elif view == "Model Results":
         f"95% CI: [{ci_low:.4f}, {ci_high:.4f}]"
     )
 
-    st.info("These results were estimated using EconML and imported from the Jupyter notebook.")
+    
 
     # --- Add the essay interpretation ---
     st.markdown("### Interpretation and Policy Insights")
@@ -165,7 +165,7 @@ elif view == "Model Results":
         "<style> p, li { text-align: justify; line-height: 1.6; } </style>",
         unsafe_allow_html=True
     )
-
+st.info("Developed by: Christopher Mbiba ")
 # ------------------------------------------------------------------------
 # CATE VISUALIZATION
 # ------------------------------------------------------------------------
