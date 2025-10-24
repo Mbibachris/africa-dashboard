@@ -6,7 +6,7 @@ st.set_page_config(page_title="Africa Dashboard", layout="wide")
 
 # --- Load Data ---
 df = pd.read_excel("data.xlsx")
-causal_results = pd.read_excel("causal_results.xlsx")
+causal_results = pd.read_excel("causal_results(1).xlsx")
 
 # --- Dashboard ---
 st.sidebar.header("Dashboard Controls")
