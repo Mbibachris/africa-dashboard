@@ -3,13 +3,18 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Africa Energy & Development Dashboard", layout="wide")
+# --- Page configuration ---
+st.set_page_config(
+    page_title="GreenHouse Gases Dashboard",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # --- Load data ---
 @st.cache_data
 def load_data():
     df = pd.read_excel("data.xlsx")
-    causal = pd.read_excel("causal_results (1).xlsx")
+    causal = pd.read_excel("causal_results.xlsx")
     cate = pd.read_excel("cate_results.xlsx")
     return df, causal, cate
 
@@ -17,14 +22,14 @@ df, causal_results, cate_results = load_data()
 
 # --- Sidebar ---
 st.sidebar.title("Navigation")
-view = st.sidebar.radio("Select a View", [
-    "Map View",
-    "Trend Comparison",
-    "Model Comparison",
-    "CATE Visualization"
-])
+view = st.sidebar.radio(
+    "Select a View",
+    ["Map View", "Trend Comparison", "Model Results", "CATE Visualization"]
+)
 
-# --- MAP VIEW ---
+# ------------------------------------------------------------------------
+# MAP VIEW
+# ------------------------------------------------------------------------
 if view == "Map View":
     st.title("🌍 Africa Map Visualization")
 
@@ -53,7 +58,9 @@ if view == "Map View":
     fig.update_layout(template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
 
-# --- TREND COMPARISON ---
+# ------------------------------------------------------------------------
+# TREND COMPARISON
+# ------------------------------------------------------------------------
 elif view == "Trend Comparison":
     st.title("📈 Country Trend Comparison")
 
@@ -83,10 +90,13 @@ elif view == "Trend Comparison":
     else:
         st.warning("Please select at least one country to display trends.")
 
+# ------------------------------------------------------------------------
+# MODEL RESULTS
+# ------------------------------------------------------------------------
 elif view == "Model Results":
-    st.subheader("Causal Machine Learning Results")
+    st.title("🧠 Causal Machine Learning Results")
 
-    # Display model comparison table
+    # --- Display model comparison table ---
     st.dataframe(causal_results, use_container_width=True)
 
     # --- Comparison plot across models ---
@@ -100,6 +110,7 @@ elif view == "Model Results":
             error_y_minus=causal_results["ATE"] - causal_results["CI_low"],
             title="Model Comparison: Average Treatment Effects with 95% Confidence Intervals"
         )
+        fig_comp.update_layout(template="plotly_white")
         st.plotly_chart(fig_comp, use_container_width=True)
     else:
         st.warning("Confidence intervals not available for visualization.")
@@ -121,7 +132,6 @@ elif view == "Model Results":
 
     # --- Add the essay interpretation ---
     st.markdown("### Interpretation and Policy Insights")
-
     st.markdown(
         """
         The causal analysis examined how economic growth, measured by GDP per capita, influences greenhouse gas (GHG)
@@ -151,18 +161,17 @@ elif view == "Model Results":
         unsafe_allow_html=True
     )
 
-    # Optional: justify the text for readability
     st.markdown(
         "<style> p, li { text-align: justify; line-height: 1.6; } </style>",
         unsafe_allow_html=True
     )
 
-
-# --- CATE VISUALIZATION ---
+# ------------------------------------------------------------------------
+# CATE VISUALIZATION
+# ------------------------------------------------------------------------
 elif view == "CATE Visualization":
     st.title("🎯 CATE Visualization (Best Model)")
 
-    # Summary stats
     st.markdown(f"**Number of CATE observations:** {len(cate_results):,}")
     st.markdown(f"**Mean CATE:** {cate_results['CATE'].mean():.4f}")
     st.markdown(f"**Std Dev:** {cate_results['CATE'].std():.4f}")
