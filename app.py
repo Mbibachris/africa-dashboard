@@ -58,6 +58,16 @@ if view == "Map View":
     fig.update_layout(template="plotly_white")
     st.plotly_chart(fig, use_container_width=True)
 
+st.markdown(
+    """
+    **Developed by:** [Christopher Mbiba](https://www.linkedin.com/in/christophermbiba)  
+    💼 **GitHub:** [Mbibachris](https://github.com/Mbibachris)  
+    📧 **Email:** mbibachris@gmail.com
+    """,
+    unsafe_allow_html=True
+)
+
+
 # ------------------------------------------------------------------------
 # TREND COMPARISON
 # ------------------------------------------------------------------------
@@ -89,6 +99,16 @@ elif view == "Trend Comparison":
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.warning("Please select at least one country to display trends.")
+
+st.markdown(
+    """
+    **Developed by:** [Christopher Mbiba](https://www.linkedin.com/in/christophermbiba)  
+    💼 **GitHub:** [Mbibachris](https://github.com/Mbibachris)  
+    📧 **Email:** mbibachris@gmail.com
+    """,
+    unsafe_allow_html=True
+)
+
 
 # ------------------------------------------------------------------------
 # MODEL RESULTS
@@ -165,7 +185,15 @@ elif view == "Model Results":
         "<style> p, li { text-align: justify; line-height: 1.6; } </style>",
         unsafe_allow_html=True
     )
-st.info("Developed by: Christopher Mbiba ")
+st.markdown(
+    """
+    **Developed by:** [Christopher Mbiba](https://www.linkedin.com/in/christophermbiba)  
+    💼 **GitHub:** [Mbibachris](https://github.com/Mbibachris)  
+    📧 **Email:** mbibachris@gmail.com
+    """,
+    unsafe_allow_html=True
+)
+
 # ------------------------------------------------------------------------
 # CATE VISUALIZATION
 # ------------------------------------------------------------------------
@@ -202,3 +230,11 @@ elif view == "CATE Visualization":
         )
         fig2.update_layout(template="plotly_white")
         st.plotly_chart(fig2, use_container_width=True)
+st.markdown(
+    """
+    **Developed by:** [Christopher Mbiba](https://www.linkedin.com/in/christophermbiba)  
+    💼 **GitHub:** [Mbibachris](https://github.com/Mbibachris)  
+    📧 **Email:** mbibachris@gmail.com
+    """,
+    unsafe_allow_html=True
+)
