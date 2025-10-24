@@ -83,33 +83,57 @@ elif view == "Trend Comparison":
     else:
         st.warning("Please select at least one country to display trends.")
 
-# --- MODEL COMPARISON ---
-elif view == "Model Comparison":
-    st.title("⚖️ Causal Model Comparison: ATE Estimates")
+elif view == "Model Results":
+    st.subheader("Causal Machine Learning Results")
 
-    # Show table
-    st.dataframe(causal_results, use_container_width=True)
+    # Display table
+    st.dataframe(causal_results)
 
-    # Bar chart of ATE with CI
-    fig = go.Figure()
-    fig.add_trace(go.Bar(
-        x=causal_results["Model"],
-        y=causal_results["ATE"],
-        error_y=dict(
-            type='data',
-            array=(causal_results["CI_high"] - causal_results["ATE"]).abs(),
-            visible=True
-        ),
-        name="ATE",
-        marker_color="indianred"
-    ))
-    fig.update_layout(
-        title="Average Treatment Effect (ATE) with 95% Confidence Intervals",
-        yaxis_title="ATE Estimate",
-        xaxis_title="Model",
-        template="plotly_white"
+    # Display ATE summary metrics
+    best_model = causal_results.loc[causal_results["abs_ATE"].idxmax(), "Model"]
+    ate = causal_results["ATE"].iloc[causal_results["abs_ATE"].idxmax()]
+    ci_low = causal_results["CI_low"].iloc[causal_results["abs_ATE"].idxmax()]
+    ci_high = causal_results["CI_high"].iloc[causal_results["abs_ATE"].idxmax()]
+
+    st.metric(
+        f"Best Model: {best_model}",
+        f"ATE = {ate:.4f}",
+        f"95% CI: [{ci_low:.4f}, {ci_high:.4f}]"
     )
-    st.plotly_chart(fig, use_container_width=True)
+
+    st.info("These results were estimated using EconML and imported from the Jupyter notebook.")
+
+    # --- Add Essay Interpretation ---
+    st.markdown("### Interpretation and Policy Insights")
+
+    interpretation_text = """
+    The causal analysis examined how economic growth, measured by GDP per capita, influences greenhouse gas (GHG)
+    emissions across African economies after controlling for governance quality. Two models were estimated:
+    a **Linear Double Machine Learning (LinearDML)** and a **Causal Forest Double Machine Learning (CausalForestDML)**.
+
+    Both models found small, positive but statistically insignificant effects. For the LinearDML model,
+    the average treatment effect (ATE) was **0.00063**, with a 95% confidence interval from **–0.0052 to 0.0065**.
+    The CausalForestDML model yielded an ATE of **0.00336**, with a 95% confidence interval from **–0.0109 to 0.0176**.
+    Because both intervals include zero, there is no statistically significant evidence that GDP per capita
+    causally increases GHG emissions once governance quality is taken into account.
+
+    This result suggests that the growth–environment relationship in Africa is not straightforward.
+    Economic expansion, by itself, does not necessarily lead to higher emissions, especially in countries
+    with effective governance structures. Good institutions can mediate the environmental impact of growth
+    by enforcing environmental laws, promoting clean energy adoption, and supporting sustainable production practices.
+
+    **Policy implications:** The findings highlight that economic and environmental goals need not conflict.
+    Policymakers should focus on strengthening governance and institutional frameworks to ensure that economic
+    progress is achieved sustainably. By investing in renewable energy, regulatory enforcement, and resource transparency,
+    African nations can pursue growth that is environmentally responsible.
+
+    The wide confidence intervals also indicate heterogeneity—meaning that some countries may experience stronger
+    or weaker effects depending on their institutional context. Future work using **Conditional Average Treatment
+    Effects (CATEs)** can uncover where growth most strongly drives emissions and where green transitions are working best.
+    """
+
+    st.markdown(interpretation_text)
+
 
 # --- CATE VISUALIZATION ---
 elif view == "CATE Visualization":
