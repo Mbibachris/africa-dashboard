@@ -14,7 +14,7 @@ st.set_page_config(
 @st.cache_data
 def load_data():
     df = pd.read_excel("data.xlsx")
-    causal = pd.read_excel("causal_results.xlsx")
+    causal = pd.read_excel("causal_results (1).xlsx")
     cate = pd.read_excel("cate_results.xlsx")
     return df, causal, cate
 
